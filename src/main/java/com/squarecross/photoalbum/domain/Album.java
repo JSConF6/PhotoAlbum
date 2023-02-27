@@ -1,6 +1,7 @@
 package com.squarecross.photoalbum.domain;
 
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name="album", schema = "photo_album", uniqueConstraints = {@UniqueConstraint(columnNames = "album_id")}) // name: 테이블명, schema: 스키마명, uniqueConstraints: 반복되면 안되는 제약조건
+@EntityListeners(AuditingEntityListener.class)
 public class Album {
 
     @Id // 해당 Entity의 Primary Key로 사용한다는 의미

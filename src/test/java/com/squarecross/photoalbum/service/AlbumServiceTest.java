@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import javax.persistence.EntityNotFoundException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest // 스프링 컴테이너 내에 있는 모든 빈을 DI로 가져와서 사용할 수 있도록 만듭니다.
@@ -93,5 +97,17 @@ class AlbumServiceTest {
 
         AlbumDto albumDto = albumService.getAlbum(savedAlbum.getAlbumId());
         assertEquals(2, albumDto.getCount());
+    }
+
+    @Test
+    void testAlbumCreate() throws IOException {
+        AlbumDto albumDto = new AlbumDto();
+        albumDto.setAlbumName("나의 앨범");
+
+        AlbumDto album = albumService.createAlbum(albumDto);
+        assertNotNull(album);
+
+        Files.delete(Paths.get(Constants.PATH_PREFIX + "/photos/original/" + album.getAlbumId()));
+        Files.delete(Paths.get(Constants.PATH_PREFIX + "/photos/thumb/" + album.getAlbumId()));
     }
 }

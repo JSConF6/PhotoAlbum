@@ -1,12 +1,14 @@
 package com.squarecross.photoalbum.domain;
 
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.util.Date;
 
 @Entity
 @Table(name = "photo", schema = "photo_album", uniqueConstraints = {@UniqueConstraint(columnNames = "photo_id")})
+@EntityListeners(AuditingEntityListener.class)
 public class Photo {
 
     @Id
