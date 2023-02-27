@@ -9,7 +9,6 @@ public class AlbumDto {
     private Date createdAt;
     private int count;
     private List<String> thumbUrls;
-    private String orderBy;
 
     public Long getAlbumId() {
         return albumId;
@@ -49,13 +48,5 @@ public class AlbumDto {
 
     public void setThumbUrls(List<String> thumbUrls) {
         this.thumbUrls = thumbUrls;
-    }
-
-    public String getOrderBy() {
-        return orderBy;
-    }
-
-    public void setOrderBy(String orderBy) {
-        this.orderBy = orderBy;
     }
 }

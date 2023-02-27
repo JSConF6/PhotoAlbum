@@ -1,5 +1,6 @@
 package com.squarecross.photoalbum.service;
 
+import com.squarecross.photoalbum.Constants;
 import com.squarecross.photoalbum.domain.Album;
 import com.squarecross.photoalbum.domain.Photo;
 import com.squarecross.photoalbum.dto.AlbumDto;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,9 +53,9 @@ class AlbumServiceTest {
         Album savedAlbum = albumRepository.save(album);
 
         Throwable exception = assertThrows(EntityNotFoundException.class, () -> {
-            albumService.getAlbum(Long.valueOf(2));
+            albumService.getAlbum(Long.valueOf(99));
         }, "예외가 발생하지 않았습니다.");
-        assertEquals("앨범 아이디 2로 조회되지 않았습니다.", exception.getMessage());
+        assertEquals("앨범 아이디 99로 조회되지 않았습니다.", exception.getMessage());
     }
 
 
@@ -132,8 +134,51 @@ class AlbumServiceTest {
 
         // 최신순 정렬, 두번째로 생성한 앨범이 먼저 나와야합니다.
         List<Album> resName = albumRepository.findByAlbumNameContainingOrderByAlbumNameAsc("aaa");
-        assertEquals("aaaa", resDate.get(0).getAlbumName()); // 0번째 Index가 두번째 앨범명 aaaa 인지 체크
-        assertEquals("aaab", resDate.get(1).getAlbumName()); // 1번째 Index가 두번째 앨범명 aaab 인지 체크
+        assertEquals("aaaa", resName.get(0).getAlbumName()); // 0번째 Index가 두번째 앨범명 aaaa 인지 체크
+        assertEquals("aaab", resName.get(1).getAlbumName()); // 1번째 Index가 두번째 앨범명 aaab 인지 체크
         assertEquals(2, resDate.size()); // aaa 이름을 가진 다른 앨범이 없다는 가정하에, 검색 키워드에 해당하는 앨범 필터링 체크
+    }
+
+    @Test
+    void testChangeAlbumName() throws IOException {
+        // 앨볌 생성
+        AlbumDto albumDto = new AlbumDto();
+        albumDto.setAlbumName("변경전");
+        AlbumDto res = albumService.createAlbum(albumDto);
+
+        Long albumId = res.getAlbumId(); // 생성된 앨범 아이디 추출
+        AlbumDto updateDto = new AlbumDto();
+        updateDto.setAlbumName("변경후"); // 업데이트용 Dto 생성
+        albumService.changeName(albumId, updateDto);
+
+        AlbumDto updatedDto = albumService.getAlbum(albumId);
+
+        // 앨범명 변경되었는지 확인
+        assertEquals("변경후", updatedDto.getAlbumName());
+    }
+
+    @Test
+    void testDeleteAlbum() throws IOException {
+        Album album = new Album();
+        album.setAlbumName("테스트");
+
+        Photo photo = new Photo();
+        photo.setFileName("테스트 사진");
+        photo.setAlbum(album);
+        album.setPhotos(List.of(photo));
+
+        Album savedAlbum = albumRepository.save(album);
+        Long albumId = savedAlbum.getAlbumId();
+
+        Files.createDirectories(Paths.get(Constants.PATH_PREFIX + "/photos/original/" + albumId));
+        Files.createDirectories(Paths.get(Constants.PATH_PREFIX + "/photos/thumb/" + albumId));
+
+        albumService.deleteAlbum(albumId);
+
+        Optional<Album> findAlbum = albumRepository.findById(albumId);
+        assertThrows(NoSuchElementException.class, () -> { findAlbum.get(); });
+
+        int count = photoRepository.countByAlbum_AlbumId(albumId);
+        assertEquals(0, count);
     }
 }

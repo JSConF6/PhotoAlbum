@@ -1,43 +1,15 @@
-package com.squarecross.photoalbum.domain;
+package com.squarecross.photoalbum.dto;
 
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.*;
 import java.util.Date;
 
-@Entity
-@Table(name = "photo", schema = "photo_album", uniqueConstraints = {@UniqueConstraint(columnNames = "photo_id")})
-@EntityListeners(AuditingEntityListener.class)
-public class Photo {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "photo_id", unique = true, nullable = false)
+public class PhotoDto {
     private Long photoId;
-
-    @Column(name = "file_name", unique = false, nullable = true)
     private String fileName;
-
-    @Column(name = "file_size", unique = false, nullable = true)
     private int fileSize;
-
-    @Column(name = "original_url", unique = false, nullable = true)
     private String originalUrl;
-
-    @Column(name = "thumb_url", unique = false, nullable = true)
     private String thumbUrl;
-
-    @Column(name = "uploaded_at", unique = false, nullable = true)
-    @CreatedDate
     private Date uploadedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "album_id")
-    private Album album;
-
-    public Photo() {
-    }
+    private Long albumId;
 
     public Long getPhotoId() {
         return photoId;
@@ -87,11 +59,11 @@ public class Photo {
         this.uploadedAt = uploadedAt;
     }
 
-    public Album getAlbum() {
-        return album;
+    public Long getAlbumId() {
+        return albumId;
     }
 
-    public void setAlbum(Album album) {
-        this.album = album;
+    public void setAlbumId(Long albumId) {
+        this.albumId = albumId;
     }
 }
