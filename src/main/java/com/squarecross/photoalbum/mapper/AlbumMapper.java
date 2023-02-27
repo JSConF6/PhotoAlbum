@@ -7,7 +7,7 @@ public class AlbumMapper {
     public static AlbumDto convertToDto(Album album){
         AlbumDto albumDto = new AlbumDto();
         albumDto.setAlbumId(album.getAlbumId());
-        album.setAlbumName(album.getAlbumName());
+        albumDto.setAlbumName(album.getAlbumName());
         albumDto.setCreatedAt(album.getCreatedAt());
         return albumDto;
     }
