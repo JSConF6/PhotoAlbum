@@ -4,6 +4,7 @@ import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name="album", schema = "photo_album", uniqueConstraints = {@UniqueConstraint(columnNames = "album_id")}) // name: 테이블명, schema: 스키마명, uniqueConstraints: 반복되면 안되는 제약조건
@@ -20,6 +21,9 @@ public class Album {
     @Column(name = "created_at", unique = false, nullable = true)
     @CreatedDate // 새로운 앨범을 생성해 DB INSERT할 때 자동으로 현재 시간을 입력해줍니다.
     private Date createdAt;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "album", cascade = CascadeType.ALL)
+    private List<Photo> photos;
 
     public Album() {
     }
@@ -46,5 +50,13 @@ public class Album {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public List<Photo> getPhotos() {
+        return photos;
+    }
+
+    public void setPhotos(List<Photo> photos) {
+        this.photos = photos;
     }
 }
