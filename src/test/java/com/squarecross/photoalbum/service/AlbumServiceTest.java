@@ -1,7 +1,10 @@
 package com.squarecross.photoalbum.service;
 
 import com.squarecross.photoalbum.domain.Album;
+import com.squarecross.photoalbum.domain.Photo;
+import com.squarecross.photoalbum.dto.AlbumDto;
 import com.squarecross.photoalbum.repository.AlbumRepository;
+import com.squarecross.photoalbum.repository.PhotoRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +23,9 @@ class AlbumServiceTest {
     AlbumRepository albumRepository;
 
     @Autowired
+    PhotoRepository photoRepository;
+
+    @Autowired
     AlbumService albumService;
 
     @Test
@@ -28,7 +34,7 @@ class AlbumServiceTest {
         album.setAlbumName("테스트");
         Album savedAlbum = albumRepository.save(album);
 
-        Album resAlbum = albumService.getAlbum(savedAlbum.getAlbumId());
+        AlbumDto resAlbum = albumService.getAlbum(savedAlbum.getAlbumId());
         assertEquals("테스트", resAlbum.getAlbumName());
     }
 
@@ -66,5 +72,26 @@ class AlbumServiceTest {
             albumService.getAlbumByAlbumName("테스트1");
         }, "예외가 발생하지 않았습니다.");
         assertEquals("앨범 이름 테스트1로 조회되지 않았습니다.", exception.getMessage());
+    }
+
+    @Test
+    void testPhotoCount() {
+        Album album = new Album();
+        album.setAlbumName("테스트");
+        Album savedAlbum = albumRepository.save(album);
+
+        // 사진을 생성하고, setAlbum을 통해 앨범을 지정해준 이후, repository을 사진을 저장한다.
+        Photo photo1 = new Photo();
+        photo1.setFileName("사진1");
+        photo1.setAlbum(savedAlbum);
+        photoRepository.save(photo1);
+
+        Photo photo2 = new Photo();
+        photo2.setFileName("사진1");
+        photo2.setAlbum(savedAlbum);
+        photoRepository.save(photo2);
+
+        AlbumDto albumDto = albumService.getAlbum(savedAlbum.getAlbumId());
+        assertEquals(2, albumDto.getCount());
     }
 }
