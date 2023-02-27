@@ -19,7 +19,16 @@ public class AlbumService {
         if(res.isPresent()){
             return res.get();
         } else {
-            throw new EntityNotFoundException(String.format("앨범 아이디 %d로 조회되지 않았습니다.", albumId));
+            throw new EntityNotFoundException("앨범 아이디 " + albumId + "로 조회되지 않았습니다.");
+        }
+    }
+
+    public Album getAlbumByAlbumName(String albumName){
+        Optional<Album> res = albumRepository.findByAlbumName(albumName);
+        if(res.isPresent()){
+            return res.get();
+        } else {
+            throw new EntityNotFoundException("앨범 이름 " + albumName + "로 조회되지 않았습니다.");
         }
     }
 }

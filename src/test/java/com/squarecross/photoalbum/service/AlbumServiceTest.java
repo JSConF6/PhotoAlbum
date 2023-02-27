@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import javax.persistence.EntityNotFoundException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,5 +30,41 @@ class AlbumServiceTest {
 
         Album resAlbum = albumService.getAlbum(savedAlbum.getAlbumId());
         assertEquals("테스트", resAlbum.getAlbumName());
+    }
+
+    @Test
+    void getAlbumException() {
+        Album album = new Album();
+        album.setAlbumName("테스트");
+        Album savedAlbum = albumRepository.save(album);
+
+        Throwable exception = assertThrows(EntityNotFoundException.class, () -> {
+            albumService.getAlbum(Long.valueOf(2));
+        }, "예외가 발생하지 않았습니다.");
+        assertEquals("앨범 아이디 2로 조회되지 않았습니다.", exception.getMessage());
+    }
+
+
+
+    @Test
+    void getAlbumByAlbumName() {
+        Album album = new Album();
+        album.setAlbumName("테스트");
+        Album savedAlbum = albumRepository.save(album);
+
+        Album resAlbum = albumService.getAlbumByAlbumName(savedAlbum.getAlbumName());
+        assertEquals("테스트", resAlbum.getAlbumName());
+    }
+
+    @Test
+    void getAlbumByAlbumNameException() {
+        Album album = new Album();
+        album.setAlbumName("테스트");
+        Album savedAlbum = albumRepository.save(album);
+
+        Throwable exception = assertThrows(EntityNotFoundException.class, () -> {
+            albumService.getAlbumByAlbumName("테스트1");
+        }, "예외가 발생하지 않았습니다.");
+        assertEquals("앨범 이름 테스트1로 조회되지 않았습니다.", exception.getMessage());
     }
 }
