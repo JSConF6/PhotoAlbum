@@ -5,6 +5,11 @@ spring:
     username: jsconf
     password: jsconf!@7765
 
+  servlet:
+    multipart:
+      max-file-size: 10000KB
+      max-request-size: 10000KB
+
   jpa:
     hibernate:
       ddl-auto: update
