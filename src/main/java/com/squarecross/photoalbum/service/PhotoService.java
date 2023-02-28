@@ -3,7 +3,9 @@ package com.squarecross.photoalbum.service;
 import com.squarecross.photoalbum.Constants;
 import com.squarecross.photoalbum.domain.Album;
 import com.squarecross.photoalbum.domain.Photo;
+import com.squarecross.photoalbum.dto.AlbumDto;
 import com.squarecross.photoalbum.dto.PhotoDto;
+import com.squarecross.photoalbum.mapper.AlbumMapper;
 import com.squarecross.photoalbum.mapper.PhotoMapper;
 import com.squarecross.photoalbum.repository.AlbumRepository;
 import com.squarecross.photoalbum.repository.PhotoRepository;
@@ -20,9 +22,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class PhotoService {
@@ -43,6 +50,80 @@ public class PhotoService {
         } else {
             throw new EntityNotFoundException("Photo ID " + PhotoId + "가 존재하지 않습니다.");
         }
+    }
+
+    public List<PhotoDto> getPhotoList(String keyword, String sort, String orderBy) {
+        List<Photo> photos;
+        if (Objects.equals(sort, "byDate")) {
+            if (Objects.equals(orderBy, "asc")) {
+                photos = photoRepository.findByFileNameContainingOrderByUploadedAtDesc(keyword);
+            } else {
+                photos = photoRepository.findByFileNameContainingOrderByUploadedAtAsc(keyword);
+            }
+        } else if (Objects.equals(sort, "byName")){
+            if (Objects.equals(orderBy, "asc")) {
+                photos = photoRepository.findByFileNameContainingOrderByFileNameAsc(keyword);
+            } else {
+                photos = photoRepository.findByFileNameContainingOrderByFileNameDesc(keyword);
+            }
+        } else {
+            throw new EntityNotFoundException("알 수 없는 정렬 기준입니다.");
+        }
+
+        List<PhotoDto> photoDtos = PhotoMapper.convertToDtoList(photos);
+        return photoDtos;
+    }
+
+    public List<PhotoDto> movePhotos(
+            Long fromAlbumId, Long toAlbumId, List<Long> photoIds) throws IOException {
+        List<Photo> photos = new ArrayList<>();
+        for (Long photoId : photoIds) {
+            Optional<Photo> res = photoRepository.findById(photoId);
+            if (res.isPresent()) {
+                Photo photo = res.get();
+                File originalFile = new File(Constants.PATH_PREFIX + photo.getOriginalUrl());
+                File thumbFile = new File(Constants.PATH_PREFIX + photo.getThumbUrl());
+
+                String fileName = photo.getFileName();
+                fileName = getNextFileName(fileName, toAlbumId);
+                photo.setOriginalUrl("/photos/original/" + toAlbumId + "/" + fileName);
+                photo.setThumbUrl("/photos/thumb/" + toAlbumId + "/" + fileName);
+
+                File originalChangeFile = new File(Constants.PATH_PREFIX + photo.getOriginalUrl());
+                File thumbChangeFile = new File(Constants.PATH_PREFIX + photo.getThumbUrl());
+
+                Files.copy(originalFile.toPath(), originalChangeFile.toPath());
+                Files.copy(thumbFile.toPath(), thumbChangeFile.toPath());
+
+                deleteFiles(String.valueOf(originalFile.toPath()));
+                deleteFiles(String.valueOf(thumbFile.toPath()));
+
+                photos.add(photo);
+            } else {
+                throw new EntityNotFoundException("에러");
+            }
+        }
+        return PhotoMapper.convertToDtoList(photos);
+    }
+
+    private void deleteFiles(String url) throws IOException {
+        Files.delete(Path.of(url));
+    }
+
+    public List<PhotoDto> deletePhotos(List<Long> photoIds) throws IOException {
+        List<Photo> photos = new ArrayList<>();
+        for (Long photoId : photoIds) {
+            Optional<Photo> res = photoRepository.findById(photoId);
+            if (res.isPresent()) {
+                Photo photo = res.get(); photos.add(photo);
+                deleteFiles(Constants.PATH_PREFIX + photo.getOriginalUrl());
+                deleteFiles(Constants.PATH_PREFIX + photo.getThumbUrl());
+                photoRepository.deleteById(photoId);
+            } else {
+                throw new EntityNotFoundException("에러");
+            }
+        }
+        return PhotoMapper.convertToDtoList(photos);
     }
 
     public PhotoDto savePhoto(MultipartFile file, Long albumId){

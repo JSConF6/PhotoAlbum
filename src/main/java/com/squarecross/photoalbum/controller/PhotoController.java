@@ -1,5 +1,7 @@
 package com.squarecross.photoalbum.controller;
 
+import com.squarecross.photoalbum.domain.Photo;
+import com.squarecross.photoalbum.dto.AlbumDto;
 import com.squarecross.photoalbum.dto.PhotoDto;
 import com.squarecross.photoalbum.service.PhotoService;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
@@ -65,5 +67,31 @@ public class PhotoController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PhotoDto>> getPhotoList(
+            @RequestParam(value = "sort", required = false, defaultValue = "byDate") String sort,
+            @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+            @RequestParam(value = "orderBy", required = false, defaultValue = "desc") String orderBy) {
+        List<PhotoDto> photoList = photoService.getPhotoList(keyword, sort, orderBy);
+        return new ResponseEntity<>(photoList, HttpStatus.OK);
+    }
+
+    @PutMapping("/move")
+    public ResponseEntity<List<PhotoDto>> movePhotos(
+            @RequestParam("fromAlbumId") Long fromAlbumId,
+            @RequestParam("toAlbumId") Long toAlbumId,
+            @RequestParam("photoIds") List<Long> photoIds) throws IOException {
+        List<PhotoDto> photoDtos = photoService.movePhotos(fromAlbumId, toAlbumId, photoIds);
+        return new ResponseEntity<>(photoDtos, HttpStatus.OK);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<List<PhotoDto>> deletePhotos(
+            @RequestBody PhotoDto photoDto) throws IOException {
+        List<Long> photoIds = photoDto.getPhotoIds();
+        List<PhotoDto> photoDtos = photoService.deletePhotos(photoIds);
+        return new ResponseEntity<>(photoDtos, HttpStatus.OK);
     }
 }
